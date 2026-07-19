@@ -1,5 +1,4 @@
 import sys
-import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -7,16 +6,13 @@ import pandas as pd
 import pytest
 from indicators import rsi, momentum, volatility, daily_change, drawdown
 from signals import analyze, _margin_stress
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
 
 def _prices(vals):
     return pd.Series(vals, dtype=float)
 
 
 def test_rsi_overbought():
-    # Rising prices → high RSI
     p = _prices([100 + i * 2 for i in range(20)])
     assert rsi(p) > 70
 
@@ -52,7 +48,6 @@ def test_margin_stress_calm():
 
 
 def test_analyze_sell_signal():
-    # Falling prices should produce SELL
     p = _prices([110 - i * 2 for i in range(20)])
     r = analyze("TEST", p)
     assert r.signal == "SELL"

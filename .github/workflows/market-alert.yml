@@ -2,7 +2,7 @@ name: Korea Market Alert
 
 on:
   schedule:
-    - cron: "*/5 0-6 * * 1-5"  # every 5 min, 09:00–15:30 KST = 00:00–06:30 UTC, Mon–Fri
+    - cron: "*/5 0-6 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -15,6 +15,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Restore alert state
+        uses: actions/cache@v4
+        with:
+          path: /tmp/korea_alert_state.json
+          key: alert-state
+          restore-keys: alert-state
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
@@ -26,3 +33,10 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python src/main.py
+
+      - name: Save alert state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /tmp/korea_alert_state.json
+          key: alert-state-${{ github.run_id }}

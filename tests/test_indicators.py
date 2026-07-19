@@ -5,7 +5,9 @@ import pandas as pd
 import pytest
 from indicators import rsi, momentum, volatility, daily_change, drawdown
 from signals import analyze, _margin_stress
-
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 def _prices(vals):
     return pd.Series(vals, dtype=float)

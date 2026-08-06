@@ -53,23 +53,47 @@ def get_history(ticker, days=10):
 def check_position(key, cfg, state, alerts):
     ticker = cfg["ticker"]
     hist = get_history(ticker, cfg["lookback_days"] + 2)
+    pos_state = state.setdefault(key, {})
+
     if hist is None or hist.empty:
-        alerts.append(f"⚠️ {key}: no data returned for {ticker}")
+        # Only alert on missing data occasionally, not every run
+        # (avoids permanent spam if a ticker symbol is wrong).
+        miss_count = pos_state.get("missing_count", 0) + 1
+        pos_state["missing_count"] = miss_count
+        if miss_count in (1, 5, 20):
+            alerts.append(f"⚠️ {key}: no data returned for ticker '{ticker}' ({miss_count}x). Check ticker symbol in config.yml.")
         return
+    pos_state["missing_count"] = 0
 
     last_price = float(hist["Close"].iloc[-1])
     rolling_high = float(hist["Close"].tail(cfg["lookback_days"]).max())
     trailing_stop = rolling_high * (1 - cfg["trailing_stop_pct"] / 100)
     effective_stop = max(trailing_stop, cfg["hard_floor"])
 
-    prev_high = state.get(key, {}).get("rolling_high", 0)
-    state.setdefault(key, {})["rolling_high"] = rolling_high
-    state[key]["last_price"] = last_price
-    state[key]["effective_stop"] = effective_stop
-    state[key]["last_checked"] = datetime.utcnow().isoformat()
+    pos_state["rolling_high"] = rolling_high
+    pos_state["last_price"] = last_price
+    pos_state["effective_stop"] = effective_stop
+    pos_state["last_checked"] = datetime.utcnow().isoformat()
 
     breached = last_price < effective_stop
     near = last_price < effective_stop * 1.03  # within 3% of stop
+
+    current_status = "breached" if breached else ("watch" if near else "ok")
+    prev_status = pos_state.get("alert_status", "ok")
+    pos_state["alert_status"] = current_status
+
+    # Only notify when status CHANGES (ok->watch, watch->breached, etc.),
+    # not every run while it stays the same. Re-remind once/day if still breached.
+    should_notify = current_status != prev_status
+    if current_status == "breached" and not should_notify:
+        last_notified = pos_state.get("breach_last_notified", "")
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        if last_notified != today:
+            should_notify = True
+            pos_state["breach_last_notified"] = today
+
+    if not should_notify:
+        return
 
     if breached:
         alerts.append(
@@ -82,9 +106,31 @@ def check_position(key, cfg, state, alerts):
             f"🟡 WATCH — {cfg['name']} ({ticker}): "
             f"price {last_price:.2f} {cfg['currency']} approaching stop {effective_stop:.2f}."
         )
+    elif prev_status != "ok":
+        alerts.append(
+            f"🟢 CLEARED — {cfg['name']} ({ticker}): "
+            f"price {last_price:.2f} {cfg['currency']} back above stop {effective_stop:.2f}."
+        )
 
 
-def check_correlation_triggers(cfg, alerts):
+def _notify_once_per_day(state, key, condition_met, message, alerts):
+    """Fire an alert on new trigger, then at most once/day while it persists."""
+    cs = state.setdefault("correlation", {})
+    prev = cs.get(key, {}).get("active", False)
+    cs.setdefault(key, {})["active"] = condition_met
+
+    if not condition_met:
+        return  # no alert when condition isn't met; state already cleared above
+
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    last_notified = cs[key].get("last_notified", "")
+    newly_triggered = not prev
+    if newly_triggered or last_notified != today:
+        alerts.append(message)
+        cs[key]["last_notified"] = today
+
+
+def check_correlation_triggers(cfg, state, alerts):
     trig = cfg.get("correlation_triggers", {})
 
     # SOX below 50-day MA
@@ -94,19 +140,27 @@ def check_correlation_triggers(cfg, alerts):
         if hist is not None and len(hist) >= 50:
             ma50 = hist["Close"].tail(50).mean()
             last = hist["Close"].iloc[-1]
-            if last < ma50:
-                alerts.append(f"🔴 CORRELATION TRIGGER — SOX ({last:.1f}) below 50-day MA ({ma50:.1f}). Sector-wide confirmation signal.")
+            condition = last < ma50
+            _notify_once_per_day(
+                state, "sox_below_50dma", condition,
+                f"🔴 CORRELATION TRIGGER — SOX ({last:.1f}) below 50-day MA ({ma50:.1f}). Sector-wide confirmation signal.",
+                alerts,
+            )
 
     # Daily-drop-pct triggers (DRAM ETF, Kospi)
-    for name, key in [("dram_etf", "DRAM ETF"), ("kospi", "Kospi")]:
+    for name, label in [("dram_etf", "DRAM ETF"), ("kospi", "Kospi")]:
         t = trig.get(name)
         if not t:
             continue
         hist = get_history(t["ticker"], 5)
         if hist is not None and len(hist) >= 2:
             change_pct = (hist["Close"].iloc[-1] / hist["Close"].iloc[-2] - 1) * 100
-            if change_pct <= -t["threshold"]:
-                alerts.append(f"🔴 CORRELATION TRIGGER — {key} dropped {change_pct:.1f}% today (threshold {t['threshold']}%).")
+            condition = change_pct <= -t["threshold"]
+            _notify_once_per_day(
+                state, f"{name}_drop", condition,
+                f"🔴 CORRELATION TRIGGER — {label} dropped {change_pct:.1f}% today (threshold {t['threshold']}%).",
+                alerts,
+            )
 
     # FX move
     fx = trig.get("fx_krw_eur")
@@ -114,8 +168,12 @@ def check_correlation_triggers(cfg, alerts):
         hist = get_history(fx["pair"], 5)
         if hist is not None and len(hist) >= 2:
             change_pct = abs(hist["Close"].iloc[-1] / hist["Close"].iloc[-2] - 1) * 100
-            if change_pct >= fx["threshold"]:
-                alerts.append(f"🟡 FX TRIGGER — KRW/EUR moved {change_pct:.1f}% (threshold {fx['threshold']}%). Affects SKH GDR value.")
+            condition = change_pct >= fx["threshold"]
+            _notify_once_per_day(
+                state, "fx_krw_eur", condition,
+                f"🟡 FX TRIGGER — KRW/EUR moved {change_pct:.1f}% (threshold {fx['threshold']}%). Affects SKH GDR value.",
+                alerts,
+            )
 
 
 def send_alerts(cfg, alerts):
@@ -163,7 +221,7 @@ def main():
     for key, pos_cfg in cfg["positions"].items():
         check_position(key, pos_cfg, state, alerts)
 
-    check_correlation_triggers(cfg, alerts)
+    check_correlation_triggers(cfg, state, alerts)
     send_alerts(cfg, alerts)
     save_state(state)
 

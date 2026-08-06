@@ -1,0 +1,36 @@
+name: Portfolio Alert Monitor
+
+on:
+  schedule:
+    # Runs at 08:00 and 15:30 CEST (adjust as needed) — cron is in UTC
+    - cron: "0 6 * * 1-5"     # 08:00 CEST, Mon-Fri (pre-Frankfurt open)
+    - cron: "30 13 * * 1-5"   # 15:30 CEST, Mon-Fri (after US open)
+  workflow_dispatch: {}       # allows manual "Run workflow" button too
+
+jobs:
+  check-portfolio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run monitor
+        env:
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python monitor.py
+
+      - name: Commit updated state
+        run: |
+          git config user.name "portfolio-monitor-bot"
+          git config user.email "actions@github.com"
+          git add state.json
+          git diff --quiet --cached || git commit -m "Update state [skip ci]"
+          git push

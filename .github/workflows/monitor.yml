@@ -7,6 +7,15 @@ on:
     - cron: "30 13 * * 1-5"   # 15:30 CEST, Mon-Fri (after US open)
   workflow_dispatch: {}       # allows manual "Run workflow" button too
 
+# Prevents this workflow's own runs from overlapping/racing each other.
+# Does NOT affect your other, unrelated workflow in this repo.
+concurrency:
+  group: portfolio-alert-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
 jobs:
   check-portfolio:
     runs-on: ubuntu-latest
@@ -32,5 +41,10 @@ jobs:
           git config user.name "portfolio-monitor-bot"
           git config user.email "actions@github.com"
           git add state.json
-          git diff --quiet --cached || git commit -m "Update state [skip ci]"
-          git push
+          if git diff --quiet --cached; then
+            echo "No state changes to commit."
+          else
+            git commit -m "Update portfolio-monitor state [skip ci]"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push
+          fi

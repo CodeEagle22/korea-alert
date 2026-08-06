@@ -48,6 +48,12 @@ def fetch_mu_signal(symbol: str = "MU") -> MUSignal:
     if df.empty or len(df) < 25:
         raise RuntimeError(f"Insufficient data returned for {symbol} — cannot build a genuine signal.")
 
+    # yfinance sometimes returns MultiIndex columns (field, ticker) even for
+    # a single symbol. Flatten to plain single-level columns so downstream
+    # scalar extraction (.iloc[-1]) works correctly instead of returning a Series.
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+
     df = df.dropna()
     close = df["Close"]
 

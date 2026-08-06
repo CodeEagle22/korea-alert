@@ -11,13 +11,21 @@ Run in background:  see README.md (cron or GitHub Actions)
 import os
 import sys
 import json
+import time
+import random
 import yaml
 import requests
 import yfinance as yf
+from curl_cffi import requests as cffi_requests
 from datetime import datetime, timedelta
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yml")
 STATE_PATH = os.path.join(os.path.dirname(__file__), "state.json")
+
+# Browser-impersonating session: Yahoo Finance aggressively rate-limits
+# plain requests from datacenter IPs (like GitHub Actions runners) with 429s.
+# curl_cffi mimics real browser TLS/HTTP fingerprints to avoid this.
+_SESSION = cffi_requests.Session(impersonate="chrome")
 
 
 def load_config():
@@ -52,13 +60,22 @@ def save_state(state):
         json.dump(_json_safe(state), f, indent=2)
 
 
-def get_history(ticker, days=10):
-    try:
-        data = yf.Ticker(ticker).history(period=f"{days}d")
-        return data
-    except Exception as e:
-        print(f"[WARN] Could not fetch {ticker}: {e}")
-        return None
+def get_history(ticker, days=10, retries=3):
+    for attempt in range(1, retries + 1):
+        try:
+            t = yf.Ticker(ticker, session=_SESSION)
+            data = t.history(period=f"{days}d")
+            if data is not None and not data.empty:
+                return data
+            raise ValueError("empty response")
+        except Exception as e:
+            if attempt == retries:
+                print(f"[WARN] Could not fetch {ticker} after {retries} attempts: {e}")
+                return None
+            wait = (2 ** attempt) + random.uniform(0, 1.5)  # exponential backoff + jitter
+            print(f"[INFO] {ticker} fetch failed ({e}); retrying in {wait:.1f}s...")
+            time.sleep(wait)
+    return None
 
 
 def check_position(key, cfg, state, alerts):
@@ -232,6 +249,7 @@ def main():
 
     for key, pos_cfg in cfg["positions"].items():
         check_position(key, pos_cfg, state, alerts)
+        time.sleep(1.5)  # spread out requests, reduces chance of rate limiting
 
     check_correlation_triggers(cfg, state, alerts)
     send_alerts(cfg, alerts)

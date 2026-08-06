@@ -36,9 +36,20 @@ def load_state():
     return {}
 
 
+def _json_safe(obj):
+    """Recursively convert numpy/pandas scalar types to native Python types."""
+    if isinstance(obj, dict):
+        return {k: _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_json_safe(v) for v in obj]
+    if hasattr(obj, "item"):  # numpy scalar (bool_, float64, int64, ...)
+        return obj.item()
+    return obj
+
+
 def save_state(state):
     with open(STATE_PATH, "w") as f:
-        json.dump(state, f, indent=2)
+        json.dump(_json_safe(state), f, indent=2)
 
 
 def get_history(ticker, days=10):
@@ -75,8 +86,8 @@ def check_position(key, cfg, state, alerts):
     pos_state["effective_stop"] = effective_stop
     pos_state["last_checked"] = datetime.utcnow().isoformat()
 
-    breached = last_price < effective_stop
-    near = last_price < effective_stop * 1.03  # within 3% of stop
+    breached = bool(last_price < effective_stop)
+    near = bool(last_price < effective_stop * 1.03)  # within 3% of stop
 
     current_status = "breached" if breached else ("watch" if near else "ok")
     prev_status = pos_state.get("alert_status", "ok")
@@ -115,6 +126,7 @@ def check_position(key, cfg, state, alerts):
 
 def _notify_once_per_day(state, key, condition_met, message, alerts):
     """Fire an alert on new trigger, then at most once/day while it persists."""
+    condition_met = bool(condition_met)  # numpy.bool_ -> Python bool (JSON-safe)
     cs = state.setdefault("correlation", {})
     prev = cs.get(key, {}).get("active", False)
     cs.setdefault(key, {})["active"] = condition_met

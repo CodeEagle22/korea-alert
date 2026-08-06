@@ -1,3 +1,7 @@
 yfinance==0.2.54
 requests==2.32.3
 pytest==8.3.5
+yfinance>=0.2.40
+PyYAML>=6.0
+requests>=2.31.0
+ 

@@ -40,16 +40,25 @@ def format_message(signal: dict, result: dict) -> str:
 
 
 def send_telegram(text: str) -> None:
-    token = os.environ["TELEGRAM_BOT_TOKEN"]
-    chat_id = os.environ["TELEGRAM_CHAT_ID"]
+    token = os.environ["TELEGRAM_BOT_TOKEN"].strip()
+    chat_id = os.environ["TELEGRAM_CHAT_ID"].strip()
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     data = json.dumps({"chat_id": chat_id, "text": text}).encode("utf-8")
     req = urllib.request.Request(
         url, data=data, headers={"Content-Type": "application/json"}
     )
-    with urllib.request.urlopen(req) as resp:
-        if resp.status != 200:
-            raise RuntimeError(f"Telegram send failed: HTTP {resp.status}")
+    try:
+        with urllib.request.urlopen(req) as resp:
+            if resp.status != 200:
+                raise RuntimeError(f"Telegram send failed: HTTP {resp.status}")
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(
+            f"Telegram API rejected the request: HTTP {e.code}\n"
+            f"Response body: {body}\n"
+            "Common causes: TELEGRAM_BOT_TOKEN wrong/malformed (404), "
+            "or TELEGRAM_CHAT_ID wrong / bot never messaged first (400)."
+        ) from e
 
 
 if __name__ == "__main__":

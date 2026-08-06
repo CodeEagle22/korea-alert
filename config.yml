@@ -1,0 +1,77 @@
+# Portfolio Monitor Configuration
+# Edit prices/thresholds here — no code changes needed.
+
+positions:
+  MU:
+    name: "Micron Technology"
+    ticker: "MU"
+    currency: USD
+    cost_basis_total: 700
+    shares: 14
+    trailing_stop_pct: 15        # % below rolling high-water mark
+    lookback_days: 5             # rolling window for high-water mark
+    hard_floor: 700               # never alert-suggest a stop below this (cost basis)
+
+  SKHY:
+    name: "SK Hynix ADR"
+    ticker: "SKHY"
+    currency: USD
+    cost_basis_total: 149
+    shares: 1
+    trailing_stop_pct: 13
+    lookback_days: 5
+    hard_floor: 105
+
+  HY9H:
+    name: "SK Hynix GDR (Frankfurt)"
+    ticker: "HY9H.F"
+    currency: EUR
+    cost_basis_total: 1289
+    shares: 8
+    trailing_stop_pct: 13
+    lookback_days: 5
+    hard_floor: 700
+
+  TSM:
+    name: "Taiwan Semiconductor"
+    ticker: "TSM"
+    currency: USD
+    cost_basis_total: 375
+    shares: 2
+    trailing_stop_pct: 15
+    lookback_days: 5
+    hard_floor: 365
+
+# Correlation / macro override triggers — fire regardless of individual stop status
+correlation_triggers:
+  sox_index:
+    ticker: "^SOX"
+    rule: "below_50dma"          # alert if SOX closes below its 50-day moving average
+
+  dram_etf:
+    ticker: "DRAM"               # Roundhill Memory ETF
+    rule: "daily_drop_pct"
+    threshold: 5                 # alert if it drops >5% in a session
+
+  kospi:
+    ticker: "^KS11"
+    rule: "daily_drop_pct"
+    threshold: 5                 # matches "circuit-breaker-adjacent" moves
+
+  fx_krw_eur:
+    pair: "KRWEUR=X"
+    rule: "daily_move_pct"
+    threshold: 2                 # sharp FX move affects SKH GDR specifically
+
+# Alerting
+notifications:
+  method: "telegram"             # options: webhook (Slack/Discord), telegram, console
+  webhook_url: "${ALERT_WEBHOOK_URL}"
+  telegram_bot_token: "${TELEGRAM_BOT_TOKEN}"   # set as a GitHub Actions secret
+  telegram_chat_id: "${TELEGRAM_CHAT_ID}"       # set as a GitHub Actions secret
+
+# Tiered exit logic (informational in alert text, not auto-executed)
+tiered_exit:
+  trim_pct_on_first_trigger: 30
+  require_second_confirmation: true
+  confirmation_window_days: 3

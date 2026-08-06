@@ -16,16 +16,14 @@ import random
 import yaml
 import requests
 import yfinance as yf
-from curl_cffi import requests as cffi_requests
 from datetime import datetime, timedelta
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.yml")
 STATE_PATH = os.path.join(os.path.dirname(__file__), "state.json")
-
-# Browser-impersonating session: Yahoo Finance aggressively rate-limits
-# plain requests from datacenter IPs (like GitHub Actions runners) with 429s.
-# curl_cffi mimics real browser TLS/HTTP fingerprints to avoid this.
-_SESSION = cffi_requests.Session(impersonate="chrome")
+# Note: curl_cffi is installed as a dependency (see requirements.txt).
+# yfinance auto-detects and uses it internally for browser-impersonating
+# requests when present — do NOT pass a manual session object, it breaks
+# yfinance's internal type checks.
 
 
 def load_config():
@@ -63,7 +61,7 @@ def save_state(state):
 def get_history(ticker, days=10, retries=3):
     for attempt in range(1, retries + 1):
         try:
-            t = yf.Ticker(ticker, session=_SESSION)
+            t = yf.Ticker(ticker)
             data = t.history(period=f"{days}d")
             if data is not None and not data.empty:
                 return data

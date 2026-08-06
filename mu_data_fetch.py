@@ -57,7 +57,7 @@ def fetch_mu_signal(symbol: str = "MU") -> MUSignal:
     df = df.dropna()
     close = df["Close"]
 
-    last_price = float(close.iloc[-1])
+    last_price = float(yf.Ticker(symbol).fast_info["last_price"])  # includes pre/post market
     ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
     ema50 = float(close.ewm(span=50, adjust=False).mean().iloc[-1])
     rsi14 = compute_rsi(close, 14)

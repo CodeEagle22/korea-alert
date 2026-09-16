@@ -1,41 +1,41 @@
 {
   "MU": {
-    "missing_count": 3,
+    "missing_count": 0,
     "rolling_high": 1027.77001953125,
-    "last_price": 975.260009765625,
+    "last_price": 927.5999755859375,
     "effective_stop": 873.6045166015625,
-    "last_checked": "2026-09-14T12:03:01.567714",
+    "last_checked": "2026-09-16T10:58:50.263773",
     "alert_status": "ok"
   },
   "SKHY": {
-    "missing_count": 3,
+    "missing_count": 0,
     "rolling_high": 198.6300048828125,
-    "last_price": 190.07000732421875,
+    "last_price": 174.8300018310547,
     "effective_stop": 172.80810424804687,
-    "last_checked": "2026-09-14T12:03:03.333895",
-    "alert_status": "ok"
+    "last_checked": "2026-09-16T10:58:51.916163",
+    "alert_status": "watch"
   },
   "HY9H": {
-    "missing_count": 3,
-    "rolling_high": 1220.0,
-    "last_price": 1070.0,
-    "effective_stop": 1061.4,
-    "last_checked": "2026-09-14T12:03:05.103848",
-    "alert_status": "watch",
+    "missing_count": 0,
+    "rolling_high": 1170.0,
+    "last_price": 1105.0,
+    "effective_stop": 1017.9,
+    "last_checked": "2026-09-16T10:58:53.524293",
+    "alert_status": "ok",
     "breach_last_notified": "2026-08-11"
   },
   "TSM": {
-    "missing_count": 3,
-    "rolling_high": 439.0,
-    "last_price": 433.239990234375,
-    "effective_stop": 373.15,
-    "last_checked": "2026-09-14T12:03:06.877362",
+    "missing_count": 0,
+    "rolling_high": 435.3599853515625,
+    "last_price": 413.75,
+    "effective_stop": 370.0559875488281,
+    "last_checked": "2026-09-16T10:58:55.252000",
     "alert_status": "ok"
   },
   "correlation": {
     "sox_below_50dma": {
       "active": true,
-      "last_notified": "2026-09-14"
+      "last_notified": "2026-09-16"
     },
     "dram_etf_drop": {
       "active": false,

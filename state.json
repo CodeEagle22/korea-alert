@@ -1,35 +1,35 @@
 {
   "MU": {
     "missing_count": 0,
-    "rolling_high": 1082.280029296875,
-    "last_price": 1065.1099853515625,
-    "effective_stop": 919.9380249023437,
-    "last_checked": "2026-10-01T12:36:52.709705",
+    "rolling_high": 1090.5902099609375,
+    "last_price": 1090.5902099609375,
+    "effective_stop": 927.0016784667969,
+    "last_checked": "2026-10-01T18:58:07.992771",
     "alert_status": "ok"
   },
   "SKHY": {
     "missing_count": 0,
-    "rolling_high": 191.55999755859375,
-    "last_price": 184.14999389648438,
-    "effective_stop": 166.65719787597655,
-    "last_checked": "2026-10-01T12:36:54.363000",
+    "rolling_high": 191.9949951171875,
+    "last_price": 191.9949951171875,
+    "effective_stop": 167.03564575195313,
+    "last_checked": "2026-10-01T18:58:09.633779",
     "alert_status": "ok"
   },
   "HY9H": {
     "missing_count": 0,
-    "rolling_high": 1180.0,
-    "last_price": 1180.0,
-    "effective_stop": 1026.6,
-    "last_checked": "2026-10-01T12:36:55.959793",
+    "rolling_high": 1190.0,
+    "last_price": 1190.0,
+    "effective_stop": 1035.3,
+    "last_checked": "2026-10-01T18:58:11.290746",
     "alert_status": "ok",
     "breach_last_notified": "2026-08-11"
   },
   "TSM": {
     "missing_count": 0,
-    "rolling_high": 456.94000244140625,
-    "last_price": 456.19000244140625,
-    "effective_stop": 388.3990020751953,
-    "last_checked": "2026-10-01T12:36:57.586790",
+    "rolling_high": 458.94000244140625,
+    "last_price": 458.94000244140625,
+    "effective_stop": 390.0990020751953,
+    "last_checked": "2026-10-01T18:58:12.929619",
     "alert_status": "ok"
   },
   "correlation": {

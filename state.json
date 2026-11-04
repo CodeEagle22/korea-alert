@@ -1,45 +1,45 @@
 {
   "MU": {
-    "missing_count": 4,
-    "rolling_high": 983.22998046875,
-    "last_price": 875.3200073242188,
-    "effective_stop": 835.7454833984375,
-    "last_checked": "2026-11-02T14:57:43.051119",
-    "alert_status": "ok"
+    "missing_count": 0,
+    "rolling_high": 934.27001953125,
+    "last_price": 794.3201293945312,
+    "effective_stop": 794.1295166015625,
+    "last_checked": "2026-11-04T20:28:59.868235",
+    "alert_status": "watch"
   },
   "SKHY": {
-    "missing_count": 4,
-    "rolling_high": 164.6999969482422,
-    "last_price": 152.5500030517578,
-    "effective_stop": 143.2889973449707,
-    "last_checked": "2026-11-02T14:57:44.665387",
-    "alert_status": "ok"
+    "missing_count": 0,
+    "rolling_high": 162.08999633789062,
+    "last_price": 142.10000610351562,
+    "effective_stop": 141.01829681396484,
+    "last_checked": "2026-11-04T20:29:01.573781",
+    "alert_status": "watch"
   },
   "HY9H": {
-    "missing_count": 4,
-    "rolling_high": 1010.0,
-    "last_price": 960.0,
-    "effective_stop": 878.7,
-    "last_checked": "2026-11-02T14:57:46.329087",
+    "missing_count": 0,
+    "rolling_high": 978.0,
+    "last_price": 894.0,
+    "effective_stop": 850.86,
+    "last_checked": "2026-11-04T20:29:03.294844",
     "alert_status": "ok",
     "breach_last_notified": "2026-08-11"
   },
   "TSM": {
-    "missing_count": 4,
-    "rolling_high": 439.510009765625,
-    "last_price": 404.7900085449219,
-    "effective_stop": 373.58350830078126,
-    "last_checked": "2026-11-02T14:57:47.984178",
+    "missing_count": 0,
+    "rolling_high": 431.80999755859375,
+    "last_price": 395.0299987792969,
+    "effective_stop": 367.0384979248047,
+    "last_checked": "2026-11-04T20:29:05.040938",
     "alert_status": "ok"
   },
   "correlation": {
     "sox_below_50dma": {
       "active": true,
-      "last_notified": "2026-11-02"
+      "last_notified": "2026-11-04"
     },
     "dram_etf_drop": {
-      "active": false,
-      "last_notified": "2026-08-24"
+      "active": true,
+      "last_notified": "2026-11-04"
     },
     "kospi_drop": {
       "active": false,

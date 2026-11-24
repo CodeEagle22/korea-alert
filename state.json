@@ -1,6 +1,6 @@
 {
   "MU": {
-    "missing_count": 0,
+    "missing_count": 1,
     "rolling_high": 712.4199829101562,
     "last_price": 711.3099975585938,
     "effective_stop": 700,
@@ -8,7 +8,7 @@
     "alert_status": "watch"
   },
   "SKHY": {
-    "missing_count": 0,
+    "missing_count": 1,
     "rolling_high": 124.95500183105469,
     "last_price": 124.95500183105469,
     "effective_stop": 108.71085159301758,
@@ -17,7 +17,7 @@
     "breach_last_notified": "2026-11-17"
   },
   "HY9H": {
-    "missing_count": 0,
+    "missing_count": 1,
     "rolling_high": 804.0,
     "last_price": 804.0,
     "effective_stop": 700,
@@ -26,7 +26,7 @@
     "breach_last_notified": "2026-11-17"
   },
   "TSM": {
-    "missing_count": 0,
+    "missing_count": 1,
     "rolling_high": 369.20001220703125,
     "last_price": 369.20001220703125,
     "effective_stop": 365,
